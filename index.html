@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#172b2a">
+<title>Fishing Farm — Pixel Adventure</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@600;700;800;900&display=swap');
+:root{--ink:#18312d;--cream:#f7edcf;--gold:#f5c65b;--green:#76b86b;--deep:#173d3a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,#315b4d,#132b2b 75%);color:var(--cream);font-family:Nunito,system-ui,sans-serif;min-height:100vh;padding:16px}
+.game{width:min(100%,980px);margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}.brand{font:clamp(12px,2.4vw,19px) 'Press Start 2P',monospace;color:#ffe39a;text-shadow:3px 3px #713f2b;line-height:1.6}.sub{font-size:12px;color:#c4d8bd}.stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.pill{background:#102724;border:2px solid #52775c;border-radius:10px;padding:8px 11px;font-weight:900;font-size:13px;box-shadow:0 3px #091a19}
+.frame{background:#132b29;border:4px solid #78956a;border-radius:15px;padding:8px;box-shadow:0 10px 0 #091c1b,0 18px 40px #0006}.screen{position:relative;overflow:hidden;border:3px solid #0c201e;border-radius:7px;background:#8bc77b;line-height:0}.screen canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-action:none}.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#102724ed;border:2px solid #f5d27c;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:900;line-height:1.3;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}.toast.show{opacity:1}
+.below{display:grid;grid-template-columns:1.15fr .85fr;gap:12px;margin-top:14px}.panel{background:#17332f;border:2px solid #557b5d;border-radius:12px;padding:13px;box-shadow:0 4px #0c211f}.panel h2{font:10px 'Press Start 2P',monospace;color:#ffdc8b;margin:0 0 12px;line-height:1.8}.row{display:flex;align-items:center;justify-content:space-between;gap:8px}.muted{color:#b7cdb8;font-size:12px}.inventory{display:flex;gap:8px;flex-wrap:wrap}.slot{background:#102724;border:1px solid #52775c;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:900;min-width:82px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{border:0;border-radius:9px;padding:10px 13px;background:#f2c75e;color:#352b1b;font:900 13px Nunito;box-shadow:0 4px #a77732;cursor:pointer;touch-action:manipulation}button:active{transform:translateY(3px);box-shadow:0 1px #a77732}button.secondary{background:#8ecb83;box-shadow:0 4px #477c50}button.dark{background:#294d43;color:#fff0c9;box-shadow:0 4px #102a25}button:disabled{opacity:.45;cursor:not-allowed}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}.dpad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,38px);gap:4px}.dpad button{padding:0;font-size:18px;border-radius:8px}.dpad .up{grid-column:2}.dpad .left{grid-column:1;grid-row:2}.dpad .down{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}.hint{font-size:11px;color:#b9cdb8;text-align:right;line-height:1.6}.fishbtn{font:10px 'Press Start 2P',monospace;padding:15px 12px;line-height:1.8}
+.log{font-size:12px;color:#d3dfc7;line-height:1.7;min-height:38px}.bar{height:8px;background:#0d211e;border-radius:9px;overflow:hidden;margin-top:8px}.bar span{display:block;height:100%;width:100%;background:#e6b84f;transition:width .15s}
+@media(max-width:650px){body{padding:10px}.top{align-items:flex-start;flex-direction:column}.stats{justify-content:flex-start}.below{grid-template-columns:1fr}.controls{align-items:flex-end}.panel{padding:11px}.frame{padding:5px}.hint{max-width:155px}}
+</style>
+</head>
+<body>
+<div class="game">
+<header class="top"><div><div class="brand">FISHING FARM</div><div class="sub">Little pond, big adventure ✦ Day <span id="day">1</span></div></div><div class="stats"><div class="pill">🪙 <span id="coins">25</span></div><div class="pill">🎣 <span id="rod">Basic Rod</span></div><div class="pill">🌤️ <span id="weather">Sunny</span></div></div></header>
+<div class="frame"><div class="screen"><canvas id="world" width="640" height="360" aria-label="Pixel art fishing farm game"></canvas><div class="toast" id="toast"></div></div></div>
+<div class="controls"><div class="dpad"><button class="up" data-dir="up">▲</button><button class="left" data-dir="left">◀</button><button class="down" data-dir="down">▼</button><button class="right" data-dir="right">▶</button></div><button class="fishbtn" id="action">🎣<br>FISH / ACTION</button><div class="hint">Gerak: WASD / tombol arah<br>Aksi: SPACE / tombol kuning<br>Dekati dermaga untuk memancing</div></div>
+<div class="below">
+<section class="panel"><h2>🎒 CATCH & INVENTORY</h2><div class="inventory" id="inventory"><div class="slot">🐟 Carp × <span id="carp">0</span></div><div class="slot">🐠 Koi × <span id="koi">0</span></div><div class="slot">🦐 Shrimp × <span id="shrimp">0</span></div></div><div class="actions"><button id="sell">Sell catch · 🪙</button><button class="secondary" id="upgrade">Upgrade rod · 60 🪙</button><button class="dark" id="save">Save game</button></div></section>
+<section class="panel"><h2>📜 FARM JOURNAL</h2><div class="log" id="log">Selamat datang! Jelajahi pulau kecil ini dan cari dermaga di tepi kolam.</div><div class="bar"><span id="progress"></span></div><div class="row" style="margin-top:8px"><span class="muted">Fishing XP</span><b id="xp">0 / 5</b></div></section>
+</div>
+</div>
+<script>
+(()=>{
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+const state={x:170,y:190,coins:25,carp:0,koi:0,shrimp:0,day:1,xp:0,level:1,rod:0,busy:false};
+const fishTypes=[{key:'carp',name:'Carp',emoji:'🐟',value:8,weight:58},{key:'koi',name:'Koi',emoji:'🐠',value:18,weight:27},{key:'shrimp',name:'Shrimp',emoji:'🦐',value:30,weight:15}];
+const colors={grass:'#83bd72',dark:'#55945f',water:'#4c9fc0',water2:'#70c6d4',sand:'#d9c27d',wood:'#98633e'};
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
+function tree(x,y){rect(x-5,y+10,10,14,'#805438');rect(x-15,y,30,20,'#39764c');rect(x-10,y-7,20,18,'#4e9657');rect(x-4,y-10,8,8,'#6bb66a')}
+function draw(){
+rect(0,0,640,360,'#83bd72');
+// grass patches
+for(let i=0;i<110;i++){let x=(i*83)%640,y=(i*47)%360;rect(x,y,3,3,i%3?'#75ae68':'#9bce7a')}
+ // shoreline and pond
+ctx.fillStyle='#d9c27d';ctx.beginPath();ctx.ellipse(455,174,156,130,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#4c9fc0';ctx.beginPath();ctx.ellipse(455,165,145,120,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#70c6d4';ctx.beginPath();ctx.ellipse(438,138,85,42,-.2,0,Math.PI*2);ctx.fill();
+for(let i=0;i<12;i++){let x=365+(i*37)%180,y=112+(i*29)%110;rect(x,y,12,3,'#a5e2d9');rect(x+4,y+4,4,2,'#a5e2d9')}
+ // dock
+rect(365,205,92,43,'#805438');for(let i=0;i<6;i++)rect(367+i*15,207,3,39,'#bd8950');rect(356,242,110,7,'#68442f');
+ // path
+rect(75,225,240,22,'#d9c27d');rect(80,231,225,10,'#e8d493');
+ // cottage
+rect(65,95,95,75,'#d9b778');rect(57,88,111,17,'#a9553e');rect(76,116,25,27,'#5b8d9b');rect(120,119,23,51,'#805438');rect(128,140,4,4,'#f4d46c');
+ // garden beds
+for(let i=0;i<3;i++){rect(75+i*62,270,48,32,'#95613d');for(let j=0;j<3;j++){rect(82+i*62+j*13,278,6,8,'#65a94f');rect(83+i*62+j*13,273,4,6,'#9acb61')}}
+tree(230,90);tree(285,130);tree(560,72);tree(570,260);tree(190,300);
+ // sign
+rect(312,190,5,34,'#805438');rect(296,185,37,17,'#f0d28b');ctx.fillStyle='#513d2b';ctx.font='8px monospace';ctx.fillText('FISH',302,196);
+ // player
+const px=Math.round(state.x),py=Math.round(state.y);
+rect(px-7,py-3,14,15,'#e6b85d');rect(px-6,py-12,12,11,'#e8bb8d');rect(px-7,py-15,14,5,'#5a3d2e');rect(px-3,py-8,2,2,'#253b37');rect(px+3,py-8,2,2,'#253b37');rect(px-6,py+11,5,5,'#59433a');rect(px+2,py+11,5,5,'#59433a');
+ // world labels
+ctx.fillStyle='#183d36';ctx.font='bold 10px monospace';ctx.fillText('HOME',82,183);ctx.fillText('POND',440,286);
+}
+function nearDock(){return state.x>330&&state.x<485&&state.y>190&&state.y<270}
+function log(s){$('log').textContent=s}
+let toastTimer;
+function toast(s){$('toast').textContent=s;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),1800)}
+function updateUI(){
+$('coins').textContent=state.coins;$('carp').textContent=state.carp;$('koi').textContent=state.koi;$('shrimp').textContent=state.shrimp;$('day').textContent=state.day;$('xp').textContent=state.xp+' / '+(state.level*5);$('progress').style.width=(state.xp/(state.level*5)*100)+'%';$('rod').textContent=state.rod?'Reinforced':'Basic Rod';$('upgrade').disabled=state.rod>0||state.coins<60;$('sell').disabled=!(state.carp+state.koi+state.shrimp);
+}
+function move(dx,dy){if(state.busy)return;let nx=state.x+dx,ny=state.y+dy;if(nx<18||nx>622||ny<25||ny>335)return;state.x=nx;state.y=ny;draw()}
+function fish(){
+if(state.busy)return;
+if(!nearDock()){toast('Dekati dermaga di tepi kolam!');log('Cari dermaga kayu di sisi kiri kolam untuk mulai memancing.');return}
+state.busy=true;toast('Umpan dilempar...');log('Menunggu ikan menyambar umpan...');
+setTimeout(()=>{
+const roll=Math.random()*100;let total=0;let f=fishTypes.find(t=>(total+=t.weight,roll<total))||fishTypes[0];
+let bonus=state.rod?1.25:1;state[f.key]++;state.xp++;if(state.xp>=state.level*5){state.xp=0;state.level++;toast('LEVEL UP! Fishing level '+state.level)}else toast(f.emoji+' '+f.name+' tertangkap!');
+log('Kamu menangkap '+f.name+'! Jual hasil tangkapan untuk mendapat koin.');state.busy=false;if(state.xp===0)state.day++;updateUI();draw();
+},900);
+}
+function save(){localStorage.setItem('fishingFarmSave',JSON.stringify(state));toast('Game tersimpan di perangkat!')}
+function load(){try{let s=JSON.parse(localStorage.getItem('fishingFarmSave'));if(s)Object.assign(state,s)}catch(e){}}
+$('action').addEventListener('click',fish);
+$('sell').addEventListener('click',()=>{let n=0;fishTypes.forEach(f=>{state.coins+=state[f.key]*f.value;n+=state[f.key];state[f.key]=0});if(!n)return;log(n+' ikan/udang terjual. Koin bertambah!');toast('Hasil tangkapan terjual!');updateUI()});
+$('upgrade').addEventListener('click',()=>{if(state.rod||state.coins<60)return;state.coins-=60;state.rod=1;log('Pancing diperkuat! Peluang mendapatkan tangkapan bernilai tinggi meningkat.');toast('Rod upgraded!');updateUI()});
+$('save').addEventListener('click',save);
+const keys={ArrowUp:[0,-12],w:[0,-12],ArrowDown:[0,12],s:[0,12],ArrowLeft:[-12,0],a:[-12,0],ArrowRight:[12,0],d:[12,0]};
+window.addEventListener('keydown',e=>{if(keys[e.key]){e.preventDefault();move(...keys[e.key])}if(e.code==='Space'){e.preventDefault();fish()}});
+document.querySelectorAll('[data-dir]').forEach(b=>{let d=b.dataset.dir,vec={up:[0,-12],down:[0,12],left:[-12,0],right:[12,0]}[d];b.addEventListener('pointerdown',e=>{e.preventDefault();move(...vec)})});
+let touchStart=null;canvas.addEventListener('pointerdown',e=>{touchStart={x:e.clientX,y:e.clientY}});canvas.addEventListener('pointerup',e=>{if(!touchStart)return;let dx=e.clientX-touchStart.x,dy=e.clientY-touchStart.y;if(Math.max(Math.abs(dx),Math.abs(dy))>15){if(Math.abs(dx)>Math.abs(dy))move(Math.sign(dx)*12,0);else move(0,Math.sign(dy)*12)}touchStart=null});
+load();updateUI();draw();
+})();
+</script>
+</body>
+</html>
